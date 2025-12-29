@@ -7,7 +7,7 @@ interface ButtonProps{
 
 const defaultStyles = "bg-normal-green text-lightest-green font-medium rounded-md border-1 border-darkest-green cursor-pointer hover:bg-dark-green";
 const sizeStyles ={
-    'md':'text-md px-2 py-1',
+    'md':'text-lg px-2 py-1',
     'lg':'text-2xl px-4 py-2'
 }
 
