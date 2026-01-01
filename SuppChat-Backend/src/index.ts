@@ -22,13 +22,32 @@ wss.on("connection",(socket)=>{
                 roomid:parsedMessage.payload.roomid
             });
             console.log(`User: ${parsedMessage.payload.username} joined room ${parsedMessage.payload.roomid}`);
+
+            const currentUser = allUsers.find(x=>x.socket==socket);
+            const currentRoom = currentUser?.roomid;
+            const peopleInRoom = allUsers.filter(x=>x.roomid == currentRoom);
+            
+            peopleInRoom.forEach(x=>{
+                x.socket.send(JSON.stringify({
+                    type:'join',
+                    peopleInRoom:peopleInRoom
+                }))
+            })
         };
 
         if(parsedMessage.type == "chat"){
-            const currentRoom = allUsers.find(x=>x.socket==socket)?.roomid;
+            console.log(parsedMessage.payload.message)
+
+            const currentUser = allUsers.find(x=>x.socket==socket);
+            const currentRoom = currentUser?.roomid;
+            const messageSentBy = currentUser?.username; 
             allUsers.forEach(user=>{
-                if((user.roomid == currentRoom)&&(user.socket!=socket)){
-                    user.socket.send(parsedMessage.payload.message);
+                if((user.roomid == currentRoom)){
+                    user.socket.send(JSON.stringify({
+                        type: 'chat',
+                        username: messageSentBy,
+                        message: parsedMessage.payload.message
+                    }));
                 };
             });
         };
