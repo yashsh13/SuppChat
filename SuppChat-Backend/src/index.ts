@@ -15,7 +15,27 @@ wss.on("connection",(socket)=>{
     socket.on("message",(message: string)=>{
         const parsedMessage = JSON.parse(message);
         
-        if(parsedMessage.type == "join"){
+        if(parsedMessage.type != "chat"){
+            
+            const alreadyExistsRoom = allUsers.find(x=>x.roomid==parsedMessage.payload.roomid);
+            const alreadyExistsUsername = allUsers.find(x=>x.username==parsedMessage.payload.username);
+
+            if(alreadyExistsRoom && parsedMessage.type=='create'){
+                socket.send(JSON.stringify({
+                    type:"error",
+                    error:"Room with this id already exists"
+                }));
+                return
+            }
+
+            if((!alreadyExistsRoom && parsedMessage.type=='join')||(alreadyExistsUsername && alreadyExistsRoom)){
+                socket.send(JSON.stringify({
+                    type:"erro",
+                    error:"No Room with this ID is live or Username already taken in this room"
+                }));
+                return
+            }
+
             allUsers.push({
                 socket,
                 username:parsedMessage.payload.username,
@@ -29,7 +49,7 @@ wss.on("connection",(socket)=>{
             
             peopleInRoom.forEach(x=>{
                 x.socket.send(JSON.stringify({
-                    type:'join',
+                    type:'Enter Room',
                     peopleInRoom:peopleInRoom
                 }))
             })

@@ -2,17 +2,14 @@ import SideBar from "../components/SideBar";
 import ChatIcon from "../icons/ChatIcon";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
-import { userGlobalStateAtom, peopleInRoomAtom, chatHistoryAtom } from "../atoms/atoms";
-import { useAtomValue, useSetAtom, useAtom } from "jotai";
+import { userGlobalStateAtom, chatHistoryAtom } from "../atoms/atoms";
+import { useAtomValue, useAtom } from "jotai";
 import { useRef,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-
-
 export default function ChatRoom(){
     const userGlobalState = useAtomValue(userGlobalStateAtom);
-    const [chatHistory,setChatHistory] = useAtom(chatHistoryAtom);
-    const setPeopleInRoom = useSetAtom(peopleInRoomAtom); 
+    const [chatHistory,setChatHistory] = useAtom(chatHistoryAtom); 
     //@ts-ignore
     const messageRef = useRef<HTMLInputElement>();
     const navigate = useNavigate();
@@ -30,10 +27,6 @@ export default function ChatRoom(){
                 username: data?.username,
                 message: data?.message
                 },...chatHistory])
-            }
-
-            if(data.type=='join'){
-                setPeopleInRoom(data.peopleInRoom);
             }
         })
     },[chatHistory]);

@@ -3,8 +3,8 @@ import Button from "../components/Button";
 import InputField from "../components/InputField";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAtom } from "jotai";
-import { createRoomAtom, joinRoomAtom, userGlobalStateAtom } from '../atoms/atoms';
+import { useAtom, useSetAtom } from "jotai";
+import { createRoomAtom, joinRoomAtom, userGlobalStateAtom, peopleInRoomAtom } from '../atoms/atoms';
 
 
 export default function RoomForm(){
@@ -12,6 +12,7 @@ export default function RoomForm(){
     const [createRoom,setCreateRoom] = useAtom(createRoomAtom);
     const [joinRoom,setJoinRoom] = useAtom(joinRoomAtom);
     const [userGlobalState,setUserGlobalState] = useAtom(userGlobalStateAtom);
+    const setPeopleInRoom = useSetAtom(peopleInRoomAtom);
 
     const navigate = useNavigate();
     //@ts-ignore
@@ -21,14 +22,8 @@ export default function RoomForm(){
 
     function buttonClick(){
 
-        setUserGlobalState({
-            ...userGlobalState,
-            username: usernameRef.current.value,
-            roomid: roomIdRef.current.value
-        })
-
         userGlobalState['ws']?.send(JSON.stringify({
-                    type:'join',
+                    type:createRoom?'create':'join',
                     payload:{
                         username: usernameRef.current.value,
                         roomid: roomIdRef.current.value
@@ -36,7 +31,26 @@ export default function RoomForm(){
                 }
             )
         )
-        navigate('/chat')
+
+        userGlobalState['ws']?.addEventListener('message',(e)=>{
+            const data = JSON.parse(e.data);
+            if(data.type=='Enter Room'){
+
+                setUserGlobalState({
+                    ...userGlobalState,
+                    username: usernameRef.current.value,
+                    roomid: roomIdRef.current.value
+                })
+
+                setPeopleInRoom(data.peopleInRoom);
+                navigate('/chat');
+                return
+            }
+
+            if(data.type=='error'){
+                console.log('Error while entering room: '+ data.error);
+            }
+        })
     }
 
     return(
