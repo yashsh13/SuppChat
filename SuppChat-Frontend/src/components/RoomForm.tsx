@@ -4,13 +4,13 @@ import InputField from "../components/InputField";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAtom, useSetAtom } from "jotai";
-import { createRoomAtom, joinRoomAtom, userGlobalStateAtom, peopleInRoomAtom } from '../atoms/atoms';
-
+import { createRoomAtom, joinRoomAtom, userGlobalStateAtom, peopleInRoomAtom, errorDisplayAtom } from '../atoms/atoms';
 
 export default function RoomForm(){
     
     const [createRoom,setCreateRoom] = useAtom(createRoomAtom);
     const [joinRoom,setJoinRoom] = useAtom(joinRoomAtom);
+    const [errorDisplay,setErrorDisplay] = useAtom(errorDisplayAtom);
     const [userGlobalState,setUserGlobalState] = useAtom(userGlobalStateAtom);
     const setPeopleInRoom = useSetAtom(peopleInRoomAtom);
 
@@ -41,14 +41,16 @@ export default function RoomForm(){
                     username: usernameRef.current.value,
                     roomid: roomIdRef.current.value
                 })
-
                 setPeopleInRoom(data.peopleInRoom);
+
                 navigate('/chat');
+                createRoom?setCreateRoom(false):setJoinRoom(false);
                 return
             }
 
             if(data.type=='error'){
                 console.log('Error while entering room: '+ data.error);
+                setErrorDisplay(data.error);
             }
         })
     }
@@ -61,13 +63,15 @@ export default function RoomForm(){
                     <div className="w-xs flex justify-between items-center text-3xl text-dark-green font-medium mb-10">
                         <p>{(createRoom)?"Create Room":"Join Room"}</p>
                         <CrossIcon onClickHandler={()=>{
-                            createRoom?setCreateRoom(false):setJoinRoom(false)
+                            createRoom?setCreateRoom(false):setJoinRoom(false);
+                            setErrorDisplay('');
                         }}/>
                     </div>
                     <div className="w-xs flex flex-col justify-center items-center gap-5">
                         <InputField placeHolderValue={"Set Username"} reference={usernameRef}/>
                         <InputField placeHolderValue={(createRoom)?"Set Room ID":"Enter Room ID"} reference={roomIdRef}/>
                         <Button title={(createRoom)?"Create Room":"Join Room"} size={"lg"} onClickHandler={buttonClick}/>
+                        <p className="text-red-500 text-center">{errorDisplay}</p>
                     </div>
                 </div>
             </div>

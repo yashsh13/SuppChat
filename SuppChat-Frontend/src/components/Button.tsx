@@ -1,4 +1,3 @@
-
 interface ButtonProps{
     title: String,
     size: 'md'|'lg',
@@ -11,8 +10,7 @@ const sizeStyles ={
     'lg':'text-2xl px-4 py-2'
 }
 
-
-export default function Button({title,size,onClickHandler}: ButtonProps){
+export default function Button({ title,size,onClickHandler }: ButtonProps){
     return (
         <button className={`${defaultStyles} ${sizeStyles[size]}`} onClick={onClickHandler}>
             {title}

@@ -2,14 +2,15 @@ import SideBar from "../components/SideBar";
 import ChatIcon from "../icons/ChatIcon";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
-import { userGlobalStateAtom, chatHistoryAtom } from "../atoms/atoms";
-import { useAtomValue, useAtom } from "jotai";
+import { userGlobalStateAtom, chatHistoryAtom, peopleInRoomAtom } from "../atoms/atoms";
+import { useAtomValue, useAtom, useSetAtom } from "jotai";
 import { useRef,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ChatRoom(){
     const userGlobalState = useAtomValue(userGlobalStateAtom);
-    const [chatHistory,setChatHistory] = useAtom(chatHistoryAtom); 
+    const [chatHistory,setChatHistory] = useAtom(chatHistoryAtom);
+    const setPeopleInRoom = useSetAtom(peopleInRoomAtom);
     //@ts-ignore
     const messageRef = useRef<HTMLInputElement>();
     const navigate = useNavigate();
@@ -28,7 +29,12 @@ export default function ChatRoom(){
                 message: data?.message
                 },...chatHistory])
             }
+
+            if(data.type=='Enter Room'||data.type=='Leave Room'){
+                setPeopleInRoom(data.peopleInRoom);
+            }
         })
+
     },[chatHistory]);
 
     function sendMessage(){
@@ -53,10 +59,10 @@ export default function ChatRoom(){
                     <div className="flex flex-col-reverse overflow-y-auto">
                         {chatHistory?.map(x =>{
                             return (x.username == userGlobalState['username'])?(
-                            <div className="flex justify-end">
+                            <div className="flex justify-end" key={x.messageid}>
                                 <p className="text-xl bg-lightest-green px-5 py-1 border border-darkest-green rounded-md m-2">{x.message}</p>
                             </div>):(
-                            <div className="flex justify-start">
+                            <div className="flex justify-start" key={x.messageid}>
                                 <div>
                                     <p className="text-normal-green mx-2">{x.username}</p>
                                     <p className="text-xl bg-light-green px-5 py-1 border border-darkest-green rounded-md mx-2">{x.message}</p>
@@ -67,7 +73,7 @@ export default function ChatRoom(){
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <InputField placeHolderValue="Send Message" reference={messageRef}/>
+                    <InputField placeHolderValue="Send Message" reference={messageRef} onKeyUpHandler={(e) => e.key=='Enter'?sendMessage():null}/>
                     <Button title={"Send"} size={"md"} onClickHandler={sendMessage} />
                 </div>
             </div>

@@ -1,11 +1,13 @@
 import { WebSocketServer, type WebSocket } from "ws";
+import { v4 } from "uuid";
 
 const wss = new WebSocketServer({ port:8080 });
 
 interface Users {
     socket: WebSocket,
     username: String,
-    roomid: String
+    roomid: String,
+    userid: String
 };
 
 let allUsers: Users[] = [];
@@ -15,7 +17,7 @@ wss.on("connection",(socket)=>{
     socket.on("message",(message: string)=>{
         const parsedMessage = JSON.parse(message);
         
-        if(parsedMessage.type != "chat"){
+        if(parsedMessage.type == "create"||parsedMessage.type == "join"){
             
             const alreadyExistsRoom = allUsers.find(x=>x.roomid==parsedMessage.payload.roomid);
             const alreadyExistsUsername = allUsers.find(x=>x.username==parsedMessage.payload.username);
@@ -30,7 +32,7 @@ wss.on("connection",(socket)=>{
 
             if((!alreadyExistsRoom && parsedMessage.type=='join')||(alreadyExistsUsername && alreadyExistsRoom)){
                 socket.send(JSON.stringify({
-                    type:"erro",
+                    type:"error",
                     error:"No Room with this ID is live or Username already taken in this room"
                 }));
                 return
@@ -39,7 +41,8 @@ wss.on("connection",(socket)=>{
             allUsers.push({
                 socket,
                 username:parsedMessage.payload.username,
-                roomid:parsedMessage.payload.roomid
+                roomid:parsedMessage.payload.roomid,
+                userid: v4()
             });
             console.log(`User: ${parsedMessage.payload.username} joined room ${parsedMessage.payload.roomid}`);
 
@@ -66,10 +69,25 @@ wss.on("connection",(socket)=>{
                     user.socket.send(JSON.stringify({
                         type: 'chat',
                         username: messageSentBy,
-                        message: parsedMessage.payload.message
+                        message: parsedMessage.payload.message,
+                        messageid: v4()
                     }));
                 };
             });
         };
+
+        if(parsedMessage.type == 'leave'){
+            allUsers = allUsers.filter(x=>x.socket!=socket);
+            
+            const roomId = parsedMessage.payload.roomid;
+            const peopleInRoom = allUsers.filter(x=>x.roomid == roomId);
+            peopleInRoom.forEach(x=>{
+                x.socket.send(JSON.stringify({
+                    type:"Leave Room",
+                    peopleInRoom
+                }))
+            })
+            console.log(`${parsedMessage.payload.username} left the room: ${roomId}`);
+        }
     });
 });
